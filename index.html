@@ -1,52 +1,23 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Monsieur's Path</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monsieur's Secret Path</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <div class="game-container">
-    <!-- 封面畫面 -->
-    <div id="startScreen" class="screen">
-      <div class="pixel-art-jail">
-        <div class="bars"></div>
-        <div class="prisoner">🏃🏻‍♂️</div>
-      </div>
-      <h1 class="pixel-text">Help Monsieur Find His Way</h1>
-      <button id="startButton" class="pixel-btn">START GAME</button>
+    <div class="game-container">
+        <h1 id="level-title">LEVEL 1: THE KEY</h1>
+        <p class="subtitle">Draw a single path to fill all blocks!</p>
+        
+        <div id="board" class="board"></div>
+        
+        <div class="btn-container">
+            <button id="restart-btn">🔄 Restart</button>
+            <button id="hint-btn">💡 Hint</button>
+        </div>
     </div>
-
-    <!-- 遊戲畫面 -->
-    <div id="gameScreen" class="screen hidden">
-      <div class="header-info">
-        <h2 id="levelTitle" class="pixel-text">LEVEL 1</h2>
-        <p class="subtitle">Single Line Block Fill Puzzle</p>
-      </div>
-
-      <div id="boardContainer" class="board-container">
-        <div id="gridBoard" class="grid-board"></div>
-      </div>
-
-      <p id="gameStatus" class="status-msg">Draw a single path to fill all blocks!</p>
-
-      <div class="control-btns">
-        <button id="restartBtn" class="action-btn">🔄 Restart</button>
-        <button id="hintBtn" class="action-btn">💡 Hint</button>
-      </div>
-    </div>
-
-    <!-- 通關畫面 -->
-    <div id="winScreen" class="screen hidden">
-      <div class="pixel-art-jail">🏠✨</div>
-      <h1 class="pixel-text">SAFE AT HOME!</h1>
-      <p style="font-size: 18px; margin: 15px 0; color: #4a3b32;">Monsieur has successfully returned home!</p>
-      <button id="replayBtn" class="pixel-btn">PLAY AGAIN</button>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
