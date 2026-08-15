@@ -2,43 +2,54 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monsieur's Escape - 逃獄大作戰</title>
-    <!-- 引入像素風字體 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monsieur's Escape</title>
+    <!-- 像素字體 -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <!-- 引入外部 CSS 樣式表 -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- 封面畫面 -->
+    <!-- 1. 封面畫面 -->
     <div id="cover-screen" class="screen active">
-        <div class="cover-title">MONSIEUR'S<br>ESCAPE</div>
-        <div class="pixel-art-box">⛓️ 🧑‍🦲 ⛓️</div>
-        <div style="font-size: 10px; color: #888; margin-bottom: 20px;">幫助 Monsieur 逃出監獄！</div>
-        <button class="btn" onclick="startGame()">START GAME</button>
+        <h1 class="pixel-text title">MONSIEUR'S<br>ESCAPE</h1>
+        <div class="cover-art">
+            <span class="pixel-icon">⛓️</span>
+            <span class="pixel-icon player-face">🧑‍🦲</span>
+            <span class="pixel-icon">⛓️</span>
+        </div>
+        <p class="subtitle">幫助 <strong>Monsieur</strong> 逃出監獄！</p>
+        <button class="btn start-btn" onclick="startGame()">START GAME</button>
     </div>
 
-    <!-- 遊戲畫面 -->
+    <!-- 2. 遊戲進行畫面 -->
     <div id="game-screen" class="screen">
-        <div class="game-header" id="level-title">LEVEL 1: 手銬</div>
-        <div class="instruction">
-            遊戲規則：單線方塊填充 (Single Line Block)<br>
-            從綠色起點出發，一筆畫走過所有格子並抵達紅色終點！不可重複、不可遺漏。
+        <h2 id="level-title" class="pixel-text">LEVEL 1: 解開手銬</h2>
+        
+        <div class="instructions">
+            <p>遊戲規則：單線方塊填充（Single Line Block）</p>
+            <p>從綠色起點出發，一筆畫走過所有格子並抵達紅色終點！不可重複、不可遺漏。</p>
         </div>
-        <div class="grid-container" id="grid"></div>
-        <div class="menu-btns">
-            <button class="btn btn-small" onclick="resetLevel()">重新開始</button>
-            <button class="btn btn-small" onclick="useHint()">提示</button>
+
+        <!-- 遊戲棋盤 -->
+        <div id="grid" class="grid-container"></div>
+
+        <div class="controls">
+            <button class="btn control-btn" onclick="resetLevel()">重新開始</button>
+            <button class="btn control-btn" onclick="useHint()">提示</button>
         </div>
     </div>
 
-    <!-- 通關畫面 -->
+    <!-- 3. 通關成功畫面 -->
     <div id="win-screen" class="screen">
-        <div class="cover-title" style="color: #00ff00;">SUCCESS!</div>
-        <div class="pixel-art-box" id="win-emoji">🎉</div>
-        <div style="font-size: 12px; margin-bottom: 20px;" id="win-text">成功突破難關！</div>
-        <button class="btn" onclick="nextLevel()">下一關</button>
+        <h1 class="pixel-text win-title">LEVEL CLEAR!</h1>
+        <div class="win-art">
+            <span class="pixel-icon">🎉</span>
+            <span class="pixel-icon" id="win-emoji">⛓️</span>
+            <span class="pixel-icon">🎉</span>
+        </div>
+        <p id="win-text" class="win-desc">成功突破這一關！</p>
+        <button class="btn start-btn" onclick="nextLevel()">下一關</button>
     </div>
 
     <!-- 引入外部 JavaScript 邏輯檔 -->
