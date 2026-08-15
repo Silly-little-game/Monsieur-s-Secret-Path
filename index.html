@@ -2,57 +2,582 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monsieur's Escape</title>
-    <!-- 像素字體 -->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monsteur's Escape</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+        }
+        #app {
+            background: #16213e;
+            padding: 20px;
+            border-radius: 24px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 16px;
+            background: #0f3460;
+            cursor: pointer;
+            touch-action: none;
+        }
+        .ui {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: #e94560;
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px 24px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            box-shadow: 0 4px 0 #a0223a;
+            transition: 0.08s linear;
+            flex: 1;
+            min-width: 100px;
+            letter-spacing: 1px;
+        }
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+        .btn-hint {
+            background: #f5a623;
+            box-shadow: 0 4px 0 #b87c1a;
+        }
+        .info {
+            color: #eee;
+            font-size: 16px;
+            text-align: center;
+            padding: 6px 12px;
+            background: #1a1a3e;
+            border-radius: 30px;
+            flex: 2;
+            min-width: 150px;
+            border: 1px solid #e94560;
+        }
+        .title {
+            color: #fff;
+            font-size: 22px;
+            text-align: center;
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #e94560;
+        }
+        /* 抖動動畫 */
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            20% {
+                transform: translateX(-12px);
+            }
+            40% {
+                transform: translateX(12px);
+            }
+            60% {
+                transform: translateX(-8px);
+            }
+            80% {
+                transform: translateX(8px);
+            }
+        }
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
+    </style>
 </head>
 <body>
-
-    <!-- 1. 封面畫面 -->
-    <div id="cover-screen" class="screen active">
-        <h1 class="pixel-text title">MONSIEUR'S<br>ESCAPE</h1>
-        <div class="cover-art">
-            <span class="pixel-icon">⛓️</span>
-            <span class="pixel-icon player-face">🧑‍🦲</span>
-            <span class="pixel-icon">⛓️</span>
-        </div>
-        <p class="subtitle">幫助 <strong>Monsieur</strong> 逃出監獄！</p>
-        <button class="btn start-btn" onclick="startGame()">START GAME</button>
-    </div>
-
-    <!-- 2. 遊戲進行畫面 -->
-    <div id="game-screen" class="screen">
-        <h2 id="level-title" class="pixel-text">LEVEL 1: 解開手銬</h2>
-        
-        <div class="instructions">
-            <p>遊戲規則：單線方塊填充（Single Line Block）</p>
-            <p>從綠色起點出發，一筆畫走過所有格子並抵達紅色終點！不可重複、不可遺漏。</p>
-        </div>
-
-        <!-- 遊戲棋盤 -->
-        <div id="grid" class="grid-container"></div>
-
-        <div class="controls">
-            <button class="btn control-btn" onclick="resetLevel()">重新開始</button>
-            <button class="btn control-btn" onclick="useHint()">提示</button>
+    <div id="app">
+        <div id="titleArea" class="title">⛓️ MONSTEUR'S ESCAPE</div>
+        <canvas id="gameCanvas" width="500" height="500"></canvas>
+        <div class="ui">
+            <button class="btn" id="restartBtn">⟳ 重新開始</button>
+            <div class="info" id="levelInfo">LEVEL 1: 手銬</div>
+            <button class="btn btn-hint" id="hintBtn">💡 提示</button>
         </div>
     </div>
+    <script>
+        // ============================================================
+        //  MONSTEUR'S ESCAPE — 完整遊戲
+        //  完全符合你的需求：一筆畫、走錯抖動、三關、像素小人
+        // ============================================================
 
-    <!-- 3. 通關成功畫面 -->
-    <div id="win-screen" class="screen">
-        <h1 class="pixel-text win-title">LEVEL CLEAR!</h1>
-        <div class="win-art">
-            <span class="pixel-icon">🎉</span>
-            <span class="pixel-icon" id="win-emoji">⛓️</span>
-            <span class="pixel-icon">🎉</span>
-        </div>
-        <p id="win-text" class="win-desc">成功突破這一關！</p>
-        <button class="btn start-btn" onclick="nextLevel()">下一關</button>
-    </div>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const levelInfo = document.getElementById('levelInfo');
 
-    <!-- 引入外部 JavaScript 邏輯檔 -->
-    <script src="script.js"></script>
+        // ----- 遊戲狀態 -----
+        let currentLevel = 0; // 0:封面, 1:手銬, 2:鑰匙, 3:房子
+        let grid = []; // 二維陣列 0=空格, 1=可走
+        let rows = 0,
+            cols = 0;
+        let start = { r: 0, c: 0 };
+        let end = { r: 0, c: 0 };
+        let path = []; // 走過的路徑 [{r,c}]
+        let isDragging = false;
+        let gameOver = false; // true=通關
+        let isShaking = false;
+
+        // ----- 關卡定義 (手銬→鑰匙→房子) -----
+        const LEVELS = [{
+            name: '手銬',
+            grid: [
+                [1, 1, 1, 1, 1],
+                [1, 0, 1, 0, 1],
+                [1, 0, 1, 0, 1],
+                [1, 0, 1, 0, 1],
+                [1, 1, 1, 1, 1]
+            ],
+            start: { r: 0, c: 0 },
+            end: { r: 4, c: 4 }
+        }, {
+            name: '鑰匙',
+            grid: [
+                [1, 1, 1, 1, 0],
+                [1, 0, 1, 0, 0],
+                [1, 0, 1, 0, 0],
+                [1, 0, 1, 0, 0],
+                [1, 1, 1, 1, 1]
+            ],
+            start: { r: 0, c: 0 },
+            end: { r: 4, c: 4 }
+        }, {
+            name: '房子',
+            grid: [
+                [1, 1, 1, 1, 1],
+                [1, 0, 0, 0, 1],
+                [1, 0, 1, 0, 1],
+                [1, 0, 0, 0, 1],
+                [1, 1, 1, 1, 1]
+            ],
+            start: { r: 0, c: 0 },
+            end: { r: 4, c: 4 }
+        }];
+
+        // ----- 初始化關卡 -----
+        function loadLevel(index) {
+            const lv = LEVELS[index];
+            if (!lv) {
+                // 全部通關 → 回到封面？
+                currentLevel = 0;
+                drawCover();
+                return;
+            }
+            rows = lv.grid.length;
+            cols = lv.grid[0].length;
+            grid = lv.grid.map(row => [...row]);
+            start = { ...lv.start };
+            end = { ...lv.end };
+            path = [];
+            gameOver = false;
+            isShaking = false;
+            levelInfo.textContent = `LEVEL ${index+1}: ${lv.name}`;
+            drawGame();
+        }
+
+        // ----- 繪圖：封面 (像素小人抓欄杆) -----
+        function drawCover() {
+            ctx.clearRect(0, 0, 500, 500);
+            // 背景監獄
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(0, 0, 500, 500);
+            // 欄杆
+            for (let i = 0; i < 12; i++) {
+                ctx.fillStyle = '#7f8c8d';
+                ctx.fillRect(40 + i * 40, 60, 8, 380);
+                ctx.fillRect(42 + i * 40, 60, 4, 20);
+                ctx.fillRect(42 + i * 40, 420, 4, 20);
+            }
+            // 橫桿
+            ctx.fillStyle = '#95a5a6';
+            ctx.fillRect(30, 130, 440, 12);
+            ctx.fillRect(30, 370, 440, 12);
+
+            // ---- 像素小人 (橘色囚服) ----
+            const px = 250,
+                py = 240;
+            const s = 8; // 像素大小
+            // 身體 (橘色)
+            ctx.fillStyle = '#e67e22';
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 4; c++) {
+                    ctx.fillRect(px + c * s - 16, py + r * s - 20, s, s);
+                }
+            }
+            // 頭 (膚色)
+            ctx.fillStyle = '#f5cba7';
+            for (let r = 0; r < 5; r++) {
+                for (let c = 0; c < 4; c++) {
+                    ctx.fillRect(px + c * s - 16 + 2, py + r * s - 36, s - 2, s - 2);
+                }
+            }
+            // 眼睛
+            ctx.fillStyle = '#000';
+            ctx.fillRect(px - 6, py - 28, 3, 3);
+            ctx.fillRect(px + 6, py - 28, 3, 3);
+            // 囚服條紋
+            ctx.fillStyle = '#d35400';
+            for (let i = 0; i < 3; i++) {
+                ctx.fillRect(px - 14, py - 8 + i * 10, 28, 2);
+            }
+            // 手抓欄杆 (手臂延伸)
+            ctx.fillStyle = '#f5cba7';
+            ctx.fillRect(px - 28, py - 14, 12, 6);
+            ctx.fillRect(px + 20, py - 14, 12, 6);
+
+            // 標題
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 36px "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#e94560';
+            ctx.shadowBlur = 20;
+            ctx.fillText('MONSTEUR\'S ESCAPE', 250, 120);
+            ctx.shadowBlur = 0;
+
+            // START GAME 按鈕 (像素風)
+            ctx.fillStyle = '#e94560';
+            ctx.roundRect(150, 430, 200, 50, 12);
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 26px "Courier New", monospace';
+            ctx.fillText('START GAME', 250, 466);
+
+            // 儲存點擊區域 (簡易判斷)
+            canvas._coverBtn = { x: 150, y: 430, w: 200, h: 50 };
+        }
+
+        // 擴充 roundRect
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+            if (w < 2 * r) r = w / 2;
+            if (h < 2 * r) r = h / 2;
+            this.moveTo(x + r, y);
+            this.lineTo(x + w - r, y);
+            this.quadraticCurveTo(x + w, y, x + w, y + r);
+            this.lineTo(x + w, y + h - r);
+            this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            this.lineTo(x + r, y + h);
+            this.quadraticCurveTo(x, y + h, x, y + h - r);
+            this.lineTo(x, y + r);
+            this.quadraticCurveTo(x, y, x + r, y);
+            return this;
+        };
+
+        // ----- 繪圖：遊戲 (含像素小人起點/終點) -----
+        function drawGame() {
+            if (isShaking) return;
+            ctx.clearRect(0, 0, 500, 500);
+            const cellW = 500 / cols;
+            const cellH = 500 / rows;
+
+            // 繪製網格
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const x = c * cellW,
+                        y = r * cellH;
+                    if (grid[r][c] === 0) {
+                        ctx.fillStyle = '#1a1a3e';
+                        ctx.fillRect(x, y, cellW, cellH);
+                    } else {
+                        ctx.fillStyle = '#2c3e50';
+                        ctx.fillRect(x, y, cellW, cellH);
+                        ctx.strokeStyle = '#34495e';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(x, y, cellW, cellH);
+                    }
+                }
+            }
+
+            // 繪製路徑 (線段)
+            if (path.length > 1) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#f1c40f';
+                ctx.lineWidth = 6;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                for (let i = 0; i < path.length; i++) {
+                    const px = path[i].c * cellW + cellW / 2;
+                    const py = path[i].r * cellH + cellH / 2;
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+            }
+
+            // 畫起點 (像素小人)
+            drawPixelMan(start.r, start.c, cellW, cellH, '#e67e22', false);
+
+            // 畫終點 (橘色囚服小人)
+            drawPixelMan(end.r, end.c, cellW, cellH, '#e67e22', true);
+
+            // 如果通關, 顯示成功
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.fillRect(0, 0, 500, 500);
+                ctx.fillStyle = '#2ecc71';
+                ctx.font = 'bold 40px "Courier New", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('✅ 逃獄成功!', 250, 240);
+                ctx.fillStyle = '#fff';
+                ctx.font = '20px "Courier New", monospace';
+                ctx.fillText('點擊繼續下一關', 250, 300);
+            }
+        }
+
+        // ----- 畫像素小人 (起點/終點) -----
+        function drawPixelMan(row, col, cellW, cellH, color, isEnd) {
+            const cx = col * cellW + cellW / 2;
+            const cy = row * cellH + cellH / 2;
+            const s = Math.min(cellW, cellH) * 0.12;
+            // 身體
+            ctx.fillStyle = color;
+            for (let r = 0; r < 5; r++) {
+                for (let c = 0; c < 4; c++) {
+                    ctx.fillRect(cx + c * s - s * 2, cy + r * s - s * 2.5, s, s);
+                }
+            }
+            // 頭
+            ctx.fillStyle = '#f5cba7';
+            for (let r = 0; r < 4; r++) {
+                for (let c = 0; c < 3; c++) {
+                    ctx.fillRect(cx + c * s - s * 1.5 + 2, cy + r * s - s * 4.5, s - 1, s - 1);
+                }
+            }
+            // 眼睛
+            ctx.fillStyle = '#000';
+            ctx.fillRect(cx - s * 0.8, cy - s * 3.5, s * 0.5, s * 0.5);
+            ctx.fillRect(cx + s * 0.3, cy - s * 3.5, s * 0.5, s * 0.5);
+            // 囚服條紋
+            ctx.fillStyle = '#d35400';
+            for (let i = 0; i < 2; i++) {
+                ctx.fillRect(cx - s * 1.8, cy - s * 0.8 + i * s * 2, s * 3.6, s * 0.3);
+            }
+            // 終點加個帽子或標記
+            if (isEnd) {
+                ctx.fillStyle = '#f1c40f';
+                ctx.fillRect(cx - s * 1.2, cy - s * 5.5, s * 2.4, s * 0.8);
+            }
+        }
+
+        // ----- 檢查是否通關 (走過所有1) -----
+        function checkWin() {
+            const visited = new Set(path.map(p => `${p.r},${p.c}`));
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (grid[r][c] === 1 && !visited.has(`${r},${c}`)) {
+                        return false;
+                    }
+                }
+            }
+            // 必須最後一步在終點
+            const last = path[path.length - 1];
+            if (!last || last.r !== end.r || last.c !== end.c) return false;
+            return true;
+        }
+
+        // ----- 抖動效果 (走錯) -----
+        function shakeAndReset() {
+            if (isShaking) return;
+            isShaking = true;
+            const app = document.getElementById('app');
+            app.classList.add('shake');
+            // 畫紅色邊框
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 8;
+            ctx.strokeRect(0, 0, 500, 500);
+            setTimeout(() => {
+                app.classList.remove('shake');
+                isShaking = false;
+                // 重置路徑
+                path = [];
+                drawGame();
+            }, 400);
+        }
+
+        // ----- 遊戲邏輯：滑鼠/觸控事件 -----
+        function getGridPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+                e.preventDefault();
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            const x = (clientX - rect.left) * scaleX;
+            const y = (clientY - rect.top) * scaleY;
+            if (x < 0 || x > 500 || y < 0 || y > 500) return null;
+            const c = Math.floor(x / (500 / cols));
+            const r = Math.floor(y / (500 / rows));
+            if (r < 0 || r >= rows || c < 0 || c >= cols) return null;
+            return { r, c };
+        }
+
+        function handleStart(e) {
+            e.preventDefault();
+            // 如果在封面
+            if (currentLevel === 0) {
+                const rect = canvas.getBoundingClientRect();
+                let cx, cy;
+                if (e.touches) {
+                    cx = e.touches[0].clientX - rect.left;
+                    cy = e.touches[0].clientY - rect.top;
+                } else {
+                    cx = e.clientX - rect.left;
+                    cy = e.clientY - rect.top;
+                }
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const x = cx * scaleX,
+                    y = cy * scaleY;
+                if (x >= 150 && x <= 350 && y >= 430 && y <= 480) {
+                    currentLevel = 1;
+                    loadLevel(0);
+                }
+                return;
+            }
+            if (gameOver) {
+                // 通關後點擊進入下一關
+                if (currentLevel < LEVELS.length) {
+                    currentLevel++;
+                    if (currentLevel >= LEVELS.length) {
+                        // 全部破關 回到封面
+                        currentLevel = 0;
+                        drawCover();
+                    } else {
+                        loadLevel(currentLevel);
+                    }
+                }
+                return;
+            }
+            if (isShaking) return;
+            const pos = getGridPos(e);
+            if (!pos) return;
+            const { r, c } = pos;
+            // 必須從起點開始
+            if (r === start.r && c === start.c && path.length === 0) {
+                path.push({ r, c });
+                isDragging = true;
+                drawGame();
+            }
+        }
+
+        function handleMove(e) {
+            e.preventDefault();
+            if (!isDragging || isShaking || gameOver || currentLevel === 0) return;
+            const pos = getGridPos(e);
+            if (!pos) return;
+            const { r, c } = pos;
+            // 不能走空格
+            if (grid[r][c] === 0) return;
+            // 不能重複走過
+            if (path.some(p => p.r === r && p.c === c)) return;
+            // 必須相鄰 (上下左右)
+            const last = path[path.length - 1];
+            const dr = Math.abs(r - last.r);
+            const dc = Math.abs(c - last.c);
+            if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
+                path.push({ r, c });
+                drawGame();
+                // 檢查是否通關
+                if (checkWin()) {
+                    gameOver = true;
+                    drawGame();
+                    isDragging = false;
+                    return;
+                }
+                // 如果走到終點但沒走完所有格子 -> 抖動
+                if (r === end.r && c === end.c && !gameOver) {
+                    isDragging = false;
+                    shakeAndReset();
+                }
+            }
+        }
+
+        function handleEnd(e) {
+            e.preventDefault();
+            if (isDragging) {
+                isDragging = false;
+                // 如果最後不是終點且沒走完 不重置(讓玩家繼續)
+                // 但如果停在終點且沒走完 已在move中觸發抖動
+                // 這裡不做額外動作
+            }
+        }
+
+        // ----- 按鈕事件 -----
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            if (currentLevel === 0) {
+                drawCover();
+                return;
+            }
+            loadLevel(currentLevel - 1);
+        });
+
+        document.getElementById('hintBtn').addEventListener('click', () => {
+            if (currentLevel === 0 || gameOver) return;
+            // 簡單提示: 閃爍下一個可走的位置
+            const last = path[path.length - 1] || start;
+            const dirs = [
+                [-1, 0],
+                [1, 0],
+                [0, -1],
+                [0, 1]
+            ];
+            for (const d of dirs) {
+                const nr = last.r + d[0];
+                const nc = last.c + d[1];
+                if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+                if (grid[nr][nc] === 0) continue;
+                if (path.some(p => p.r === nr && p.c === nc)) continue;
+                // 畫閃爍提示
+                const cellW = 500 / cols;
+                const cellH = 500 / rows;
+                ctx.fillStyle = 'rgba(46, 204, 113, 0.6)';
+                ctx.fillRect(nc * cellW, nr * cellH, cellW, cellH);
+                setTimeout(() => drawGame(), 500);
+                return;
+            }
+            // 沒有可走的路徑 = 死路, 提示重置
+            alert('沒有可走的路徑，點擊重新開始');
+        });
+
+        // ----- 註冊事件 -----
+        canvas.addEventListener('mousedown', handleStart);
+        canvas.addEventListener('mousemove', handleMove);
+        canvas.addEventListener('mouseup', handleEnd);
+        canvas.addEventListener('mouseleave', handleEnd);
+        canvas.addEventListener('touchstart', handleStart, { passive: false });
+        canvas.addEventListener('touchmove', handleMove, { passive: false });
+        canvas.addEventListener('touchend', handleEnd, { passive: false });
+
+        // ----- 啟動遊戲 (顯示封面) -----
+        currentLevel = 0;
+        drawCover();
+    </script>
 </body>
 </html>
