@@ -1,26 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-Hant">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Monsieur's Secret Path</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- 開始畫面 -->
-    <div id="start-screen">
-        <div class="box">
-            <div class="icon">🏃‍♂️</div>
-            <h2>Help Monsieur Find His Way</h2>
-            <button id="start-btn">START GAME</button>
-        </div>
-    </div>
-
-    <!-- 遊戲主畫面 -->
-    <div id="game-screen" style="display:none;">
-        <h2 id="level-title">LEVEL 1</h2>
+    <div class="game-container">
+        <h1 id="level-title">LEVEL 1: THE KEY</h1>
+        <p class="subtitle">連連看填滿所有格子到達鑰匙！</p>
+        
         <div id="board"></div>
-        <div class="controls">
-            <button id="restart-btn">🔄 Restart</button>
-            <button id="hint-btn">💡 Hint</button>
+
+        <div class="btn-container">
+            <button id="restart-btn">🔄 重來</button>
+            <button id="hint-btn">💡 提示</button>
         </div>
     </div>
     <script src="script.js"></script>
