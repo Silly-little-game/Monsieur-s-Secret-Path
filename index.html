@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
@@ -11,9 +11,10 @@ body{display:flex;justify-content:center;align-items:center}
 .app{width:100%;max-width:500px;height:100dvh;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden}
 
 /* ===== COVER ===== */
-.cover{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:20px}
+.cover{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:20px}
 .cover-title{font-size:clamp(14px,4vw,20px);letter-spacing:3px;color:#ffb05d;text-shadow:2px 2px 0 #5a2e10;font-weight:bold}
-.cover-sub{font-size:9px;color:#4a5558;letter-spacing:2px;margin-top:-8px}
+.cover-sub{font-size:clamp(10px,2.5vw,13px);color:#8a9499;letter-spacing:1px;margin-top:-6px}
+.cover-hint{font-size:9px;color:#4a5558;letter-spacing:2px;margin-top:-8px}
 .pixel-scene{position:relative;width:140px;height:180px;margin:10px 0}
 .pixel-scene canvas{width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
 .start-btn{background:none;border:2px solid #ffb05d;color:#ffb05d;font-family:inherit;font-size:clamp(16px,5vw,24px);letter-spacing:5px;padding:12px 32px;cursor:pointer;transition:all .2s;font-weight:bold}
@@ -33,7 +34,7 @@ body{display:flex;justify-content:center;align-items:center}
 .cell.is-start{outline:2px solid rgba(255,176,93,.6);outline-offset:2px}
 .cell.is-end{outline:2px solid rgba(103,211,154,.6);outline-offset:2px}
 .cell.hint-glow{animation:hintAnim .6s ease-in-out 3}
-.cell-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.cell-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;font-size:20px}
 .placeholder{width:clamp(42px,13vw,62px);height:clamp(42px,13vw,62px);visibility:hidden}
 .path-line{position:absolute;height:5px;background:#ffcc66;border-radius:99px;transform-origin:left center;pointer-events:none;box-shadow:0 0 6px rgba(255,180,60,.5);z-index:5;transition:opacity .1s}
 .progress-bar{display:flex;gap:7px;margin:10px 0 6px}
@@ -49,7 +50,7 @@ body{display:flex;justify-content:center;align-items:center}
 .success-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:20px}
 .stamp{font-size:32px;color:#67d39a;border:3px solid #67d39a;padding:8px 22px;transform:rotate(-4deg);letter-spacing:4px;font-weight:bold}
 .success-screen h2{font-size:clamp(18px,5vw,28px);color:#ffb05d;letter-spacing:2px}
-.success-screen p{color:#a0aab0;font-size:11px;line-height:1.8;max-width:300px}
+.success-screen p{color:#a0aab0;font-size:11px;line-height:1.8;max-width:320px}
 
 /* ===== TOAST ===== */
 .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:#1a2024;border:1px solid #4a5860;color:#f4d9b8;border-radius:8px;padding:8px 14px;font-size:10px;pointer-events:none;transition:all .25s;z-index:100;white-space:nowrap}
@@ -68,7 +69,7 @@ body{display:flex;justify-content:center;align-items:center}
   <!-- COVER -->
   <section id="coverScreen" class="cover">
     <div class="cover-title">MONSIEUR'S QUIET ROUTE</div>
-    <div class="cover-sub">A PATH AWAITS</div>
+    <div class="cover-sub">Help Monsieur find his way</div>
     <div class="pixel-scene"><canvas id="pixelCanvas" width="140" height="180"></canvas></div>
     <button class="start-btn" id="startBtn">START GAME</button>
   </section>
@@ -85,17 +86,17 @@ body{display:flex;justify-content:center;align-items:center}
     </div>
     <div class="progress-bar" id="progressBar"></div>
     <div class="footer-btns">
-      <button class="btn primary" id="restartBtn">↻ 重新開始</button>
-      <button class="btn" id="hintBtn">✦ 提示</button>
+      <button class="btn primary" id="restartBtn">↻ Restart</button>
+      <button class="btn" id="hintBtn">✦ Hint</button>
     </div>
   </section>
 
   <!-- SUCCESS -->
   <section id="successScreen" class="success-screen hidden">
-    <div class="stamp">CLEAR</div>
-    <h2>THE WAY IS OPEN</h2>
-    <p>每一格都留下了你的足跡。<br>遠處似乎有熟悉的燈光。</p>
-    <button class="btn primary" id="againBtn">再走一次</button>
+    <div class="stamp">FREE</div>
+    <h2>YOU HELPED MONSIEUR!</h2>
+    <p>You've cleared every path and opened the way.<br>Monsieur is finally heading home.</p>
+    <button class="btn primary" id="againBtn">Play Again</button>
   </section>
 
   <div class="toast" id="toast"></div>
@@ -105,17 +106,35 @@ body{display:flex;justify-content:center;align-items:center}
 'use strict';
 
 // ===== LEVEL DATA (all paths verified: adjacent, no duplicates) =====
+// Level 1: Vertical KEY (10 cells)
+//   Col: 0 1 2
+// Row 0: X X X   <- handle
+// Row 1: X X X   <- handle
+// Row 2: . X .   <- shaft
+// Row 3: . X .   <- shaft
+// Row 4: . X X   <- tooth
 const LEVELS = [
-  { name:"KEY", cols:5, rows:3, path:[[1,0],[0,0],[0,1],[1,1],[2,1],[3,1],[4,1],[4,2]] },
-  { name:"CUFFS", cols:5, rows:3, path:[[1,0],[0,0],[0,1],[0,2],[1,2],[1,1],[2,1],[3,1],[3,0],[4,0],[4,1],[4,2],[3,2]] },
-  { name:"HOME", cols:5, rows:3, path:[[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[0,1],[0,2],[1,2],[2,2],[3,2],[4,2],[4,1]] }
+  { name:"KEY", cols:3, rows:5, path:[[0,1],[0,0],[1,0],[2,0],[2,1],[1,1],[1,2],[1,3],[1,4],[2,4]], endIcon:"🔑" },
+  { name:"CUFFS", cols:5, rows:3, path:[[1,0],[0,0],[0,1],[0,2],[1,2],[1,1],[2,1],[3,1],[3,0],[4,0],[4,1],[4,2],[3,2]], endIcon:"⛓️" },
+  { name:"HOME", cols:4, rows:4, path:[[3,0],[3,1],[2,1],[1,1],[0,1],[0,2],[1,2],[2,2],[3,2],[3,3],[2,3],[1,3],[0,3]], endIcon:"🏠" }
 ];
+// Level 2: CUFFS (13 cells) - two blocks connected
+//   Col: 0 1 2 3 4
+// Row 0: X X . X X
+// Row 1: X X X X X
+// Row 2: X X . X X
+// Level 3: HOME with chimney (13 cells)
+//   Col: 0 1 2 3
+// Row 0: . . . X   <- chimney
+// Row 1: X X X X   <- roof
+// Row 2: X X X X   <- wall
+// Row 3: X X X X   <- floor
 
 // ===== STATE =====
 let currentLevel = 0;
-let trail = []; // array of cell DOM elements in visit order
+let trail = [];
 let isDrawing = false;
-let pathLines = []; // SVG/DOM line elements
+let pathLines = [];
 
 // ===== DOM =====
 const board = document.getElementById('board');
@@ -141,75 +160,80 @@ function showToast(msg) {
 function drawPixelPerson() {
   const canvas = document.getElementById('pixelCanvas');
   const ctx = canvas.getContext('2d');
-  const s = 4; // pixel scale
   ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Prison bars (background)
-  ctx.fillStyle = '#555e63';
-  for (let i = 0; i < 7; i++) {
-    ctx.fillRect(i * 22 + 4, 0, 4, 180);
-  }
-  // Bar horizontal
-  ctx.fillStyle = '#4a5358';
-  ctx.fillRect(0, 30, 140, 4);
-  ctx.fillRect(0, 130, 140, 4);
-
+  // === Draw person FIRST (behind bars) ===
   // Head
   ctx.fillStyle = '#d4956a';
-  ctx.fillRect(54, 28, 32, 28);
+  ctx.fillRect(54, 32, 32, 28);
   // Hair
   ctx.fillStyle = '#2a2520';
-  ctx.fillRect(54, 22, 32, 10);
-  ctx.fillRect(50, 28, 4, 8);
-  ctx.fillRect(86, 28, 4, 8);
+  ctx.fillRect(54, 26, 32, 10);
+  ctx.fillRect(50, 32, 4, 8);
+  ctx.fillRect(86, 32, 4, 8);
   // Eyes
   ctx.fillStyle = '#1a1a1a';
-  ctx.fillRect(62, 40, 4, 5);
-  ctx.fillRect(76, 40, 4, 5);
+  ctx.fillRect(62, 44, 4, 5);
+  ctx.fillRect(76, 44, 4, 5);
   // Mouth
   ctx.fillStyle = '#8a5a3a';
-  ctx.fillRect(66, 48, 10, 3);
+  ctx.fillRect(66, 52, 10, 3);
 
-  // Body (orange jumpsuit)
+  // Body (orange jumpsuit - full orange)
   ctx.fillStyle = '#e87830';
-  ctx.fillRect(46, 58, 48, 52);
-  // Badge/number
+  ctx.fillRect(46, 62, 48, 50);
+  // Badge/number on chest
   ctx.fillStyle = '#ffe0a0';
-  ctx.fillRect(62, 68, 16, 12);
+  ctx.fillRect(62, 70, 16, 12);
   ctx.fillStyle = '#8a5020';
-  ctx.fillRect(64, 70, 3, 8);
-  ctx.fillRect(68, 70, 3, 8);
-  ctx.fillRect(72, 70, 3, 8);
+  ctx.fillRect(64, 72, 3, 8);
+  ctx.fillRect(68, 72, 3, 8);
+  ctx.fillRect(72, 72, 3, 8);
 
-  // Arms (reaching forward/gripping bars)
+  // Arms (reaching forward/gripping bars) - orange jumpsuit
   ctx.fillStyle = '#e87830';
-  // Left arm
-  ctx.fillRect(34, 60, 14, 12);
-  ctx.fillRect(26, 58, 12, 14);
-  // Right arm
-  ctx.fillRect(92, 60, 14, 12);
-  ctx.fillRect(102, 58, 12, 14);
+  ctx.fillRect(34, 64, 14, 12);
+  ctx.fillRect(26, 62, 12, 14);
+  ctx.fillRect(92, 64, 14, 12);
+  ctx.fillRect(102, 62, 12, 14);
   // Hands (gripping bars)
   ctx.fillStyle = '#d4956a';
-  ctx.fillRect(26, 54, 10, 10);
-  ctx.fillRect(104, 54, 10, 10);
+  ctx.fillRect(26, 56, 10, 12);
+  ctx.fillRect(104, 56, 10, 12);
 
-  // Legs
-  ctx.fillStyle = '#3a4448';
-  ctx.fillRect(50, 112, 16, 28);
-  ctx.fillRect(74, 112, 16, 28);
+  // Legs (orange jumpsuit pants)
+  ctx.fillStyle = '#d06828';
+  ctx.fillRect(50, 114, 16, 30);
+  ctx.fillRect(74, 114, 16, 30);
   // Shoes
   ctx.fillStyle = '#2a2e30';
-  ctx.fillRect(48, 138, 20, 8);
-  ctx.fillRect(72, 138, 20, 8);
+  ctx.fillRect(48, 142, 20, 8);
+  ctx.fillRect(72, 142, 20, 8);
+
+  // === Draw prison bars ON TOP (in front of person) ===
+  // Vertical bars
+  ctx.fillStyle = '#5a6468';
+  for (let i = 0; i < 7; i++) {
+    ctx.fillRect(i * 22 + 6, 0, 5, 180);
+  }
+  // Horizontal bars
+  ctx.fillStyle = '#4e585c';
+  ctx.fillRect(0, 28, 140, 5);
+  ctx.fillRect(0, 100, 140, 5);
+  ctx.fillRect(0, 155, 140, 5);
+
+  // Re-draw hands ON TOP of bars (gripping)
+  ctx.fillStyle = '#d4956a';
+  ctx.fillRect(26, 56, 10, 12);
+  ctx.fillRect(104, 56, 10, 12);
 }
 
 // ===== RENDER BOARD =====
 function renderBoard() {
   const level = LEVELS[currentLevel];
-  const { cols, rows, path } = level;
-  
+  const { cols, rows, path, endIcon } = level;
+
   // Build cell set
   const cellSet = new Set(path.map(p => p[0] + ',' + p[1]));
   const startKey = path[0][0] + ',' + path[0][1];
@@ -229,17 +253,17 @@ function renderBoard() {
         cell.className = 'cell';
         cell.dataset.col = c;
         cell.dataset.row = r;
-        
+
         if (key === startKey) {
           cell.classList.add('is-start');
-          // Pixel person icon (small)
-          cell.innerHTML = '<div class="cell-icon"><svg width="20" height="24" viewBox="0 0 20 24"><rect x="7" y="0" width="6" height="6" fill="#d4956a"/><rect x="5" y="7" width="10" height="10" fill="#e87830"/><rect x="6" y="18" width="3" height="6" fill="#3a4448"/><rect x="11" y="18" width="3" height="6" fill="#3a4448"/></svg></div>';
+          // Pixel person icon (small orange figure)
+          cell.innerHTML = '<div class="cell-icon"><svg width="20" height="24" viewBox="0 0 20 24"><rect x="7" y="0" width="6" height="6" fill="#d4956a"/><rect x="5" y="7" width="10" height="10" fill="#e87830"/><rect x="6" y="18" width="3" height="6" fill="#d06828"/><rect x="11" y="18" width="3" height="6" fill="#d06828"/></svg></div>';
         } else if (key === endKey) {
           cell.classList.add('is-end');
-          // Door icon
-          cell.innerHTML = '<div class="cell-icon"><svg width="18" height="22" viewBox="0 0 18 22"><rect x="2" y="0" width="14" height="22" rx="2" fill="#2a3a40" stroke="#c8a050" stroke-width="1.5"/><circle cx="13" cy="12" r="1.5" fill="#c8a050"/></svg></div>';
+          // Use level-specific emoji icon
+          cell.innerHTML = `<div class="cell-icon">${endIcon}</div>`;
         }
-        
+
         board.appendChild(cell);
       } else {
         const ph = document.createElement('div');
@@ -294,15 +318,15 @@ function addLine(cellA, cellB) {
   const boardRect = board.getBoundingClientRect();
   const aRect = cellA.getBoundingClientRect();
   const bRect = cellB.getBoundingClientRect();
-  
+
   const x1 = aRect.left + aRect.width / 2 - boardRect.left;
   const y1 = aRect.top + aRect.height / 2 - boardRect.top;
   const x2 = bRect.left + bRect.width / 2 - boardRect.left;
   const y2 = bRect.top + bRect.height / 2 - boardRect.top;
-  
+
   const length = Math.hypot(x2 - x1, y2 - y1);
   const angle = Math.atan2(y2 - y1, x2 - x1);
-  
+
   const line = document.createElement('div');
   line.className = 'path-line';
   line.style.left = x1 + 'px';
@@ -326,10 +350,10 @@ function failShake(msg) {
   isDrawing = false;
   board.classList.add('fail-flash');
   board.classList.remove('shake-anim');
-  void board.offsetWidth; // force reflow
+  void board.offsetWidth;
   board.classList.add('shake-anim');
-  showToast(msg || '還有格子沒走到，回到起點重試。');
-  
+  showToast(msg || 'Not all cells visited. Back to start.');
+
   setTimeout(() => {
     board.classList.remove('fail-flash', 'shake-anim');
     resetTrail();
@@ -338,7 +362,7 @@ function failShake(msg) {
 
 function visitCell(cell) {
   if (!cell || !cell.classList.contains('cell')) return;
-  
+
   // First cell must be start
   if (trail.length === 0) {
     if (!cell.classList.contains('is-start')) return;
@@ -347,55 +371,52 @@ function visitCell(cell) {
     isDrawing = true;
     return;
   }
-  
+
   // Same cell as last - ignore
   if (cell === trail[trail.length - 1]) return;
-  
+
   // Must be adjacent to last cell
   const lastCell = trail[trail.length - 1];
   if (!areAdjacent(lastCell, cell)) return;
-  
+
   // Can't revisit
   if (trail.includes(cell)) {
-    failShake('不能回到已走過的格子。');
+    failShake('Cannot revisit a cell. Back to start.');
     return;
   }
-  
+
   // Visit the cell
   trail.push(cell);
   cell.classList.add('visited');
   addLine(lastCell, cell);
-  
+
   // Check if reached end
   if (cell.classList.contains('is-end')) {
     const totalCells = board.querySelectorAll('.cell').length;
     if (trail.length === totalCells) {
-      // SUCCESS!
       levelComplete();
     } else {
-      // Not all cells visited
-      failShake('還有格子沒走到，回到起點重試。');
+      failShake('Not all cells visited. Back to start.');
     }
   }
 }
 
 function levelComplete() {
   isDrawing = false;
-  showToast('路線完成！');
-  
-  // Animate cells
+  showToast('Path complete!');
+
   const cells = board.querySelectorAll('.cell');
   cells.forEach((c, i) => {
     setTimeout(() => {
       c.style.filter = 'brightness(1.3)';
     }, i * 30);
   });
-  
+
   setTimeout(() => {
     if (currentLevel < 2) {
       currentLevel++;
       renderBoard();
-      showToast('下一段路線已出現。');
+      showToast('Next path unlocked.');
     } else {
       showScreen('successScreen');
     }
@@ -405,9 +426,8 @@ function levelComplete() {
 // ===== HINT =====
 function showHint() {
   const level = LEVELS[currentLevel];
-  
+
   if (trail.length === 0) {
-    // Show start cell
     const [col, row] = level.path[0];
     const cell = getCellAt(col, row);
     if (cell) {
@@ -415,16 +435,14 @@ function showHint() {
       void cell.offsetWidth;
       cell.classList.add('hint-glow');
       setTimeout(() => cell.classList.remove('hint-glow'), 2000);
-      showToast('從金色閃爍的格子開始。');
+      showToast('Start from the glowing cell.');
     }
     return;
   }
-  
-  // Show the next step in the solution path
-  // Find where current trail matches solution
+
   const nextIndex = trail.length;
   if (nextIndex >= level.path.length) return;
-  
+
   const [col, row] = level.path[nextIndex];
   const cell = getCellAt(col, row);
   if (cell && !trail.includes(cell)) {
@@ -432,10 +450,9 @@ function showHint() {
     void cell.offsetWidth;
     cell.classList.add('hint-glow');
     setTimeout(() => cell.classList.remove('hint-glow'), 2000);
-    showToast('金色閃爍的是下一步方向。');
+    showToast('The glowing cell is your next step.');
   } else {
-    // User deviated from solution - suggest restart
-    showToast('試試重新開始，跟著提示走。');
+    showToast('Try restarting and follow the hints.');
   }
 }
 
@@ -457,8 +474,6 @@ function handlePointerMove(e) {
 }
 
 function handlePointerUp(e) {
-  // Don't end drawing - user can lift and continue
-  // isDrawing stays true until reset or level complete
   activePointerId = null;
 }
 
@@ -490,7 +505,7 @@ document.getElementById('startBtn').addEventListener('click', () => {
 
 document.getElementById('restartBtn').addEventListener('click', () => {
   resetTrail();
-  showToast('已回到起點。');
+  showToast('Back to start.');
 });
 
 document.getElementById('hintBtn').addEventListener('click', showHint);
