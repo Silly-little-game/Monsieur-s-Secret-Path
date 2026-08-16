@@ -1,583 +1,508 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monsteur's Escape</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
-        body {
-            background: #1a1a2e;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: 'Courier New', monospace;
-        }
-        #app {
-            background: #16213e;
-            padding: 20px;
-            border-radius: 24px;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
-        }
-        canvas {
-            display: block;
-            margin: 0 auto;
-            border-radius: 16px;
-            background: #0f3460;
-            cursor: pointer;
-            touch-action: none;
-        }
-        .ui {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 16px;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .btn {
-            background: #e94560;
-            border: none;
-            color: #fff;
-            font-size: 18px;
-            font-weight: bold;
-            padding: 10px 24px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-family: 'Courier New', monospace;
-            box-shadow: 0 4px 0 #a0223a;
-            transition: 0.08s linear;
-            flex: 1;
-            min-width: 100px;
-            letter-spacing: 1px;
-        }
-        .btn:active {
-            transform: translateY(4px);
-            box-shadow: none;
-        }
-        .btn-hint {
-            background: #f5a623;
-            box-shadow: 0 4px 0 #b87c1a;
-        }
-        .info {
-            color: #eee;
-            font-size: 16px;
-            text-align: center;
-            padding: 6px 12px;
-            background: #1a1a3e;
-            border-radius: 30px;
-            flex: 2;
-            min-width: 150px;
-            border: 1px solid #e94560;
-        }
-        .title {
-            color: #fff;
-            font-size: 22px;
-            text-align: center;
-            margin-bottom: 12px;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px #e94560;
-        }
-        /* 抖動動畫 */
-        @keyframes shake {
-            0%,
-            100% {
-                transform: translateX(0);
-            }
-            20% {
-                transform: translateX(-12px);
-            }
-            40% {
-                transform: translateX(12px);
-            }
-            60% {
-                transform: translateX(-8px);
-            }
-            80% {
-                transform: translateX(8px);
-            }
-        }
-        .shake {
-            animation: shake 0.3s ease-in-out;
-        }
-    </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<title>Monsieur's Quiet Route</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:#0a0b0d;color:#f5e9d4;font-family:'Courier New',Courier,monospace;overflow:hidden;touch-action:none}
+body{display:flex;justify-content:center;align-items:center}
+.app{width:100%;max-width:500px;height:100dvh;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden}
+
+/* ===== COVER ===== */
+.cover{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:20px}
+.cover-title{font-size:clamp(14px,4vw,20px);letter-spacing:3px;color:#ffb05d;text-shadow:2px 2px 0 #5a2e10;font-weight:bold}
+.cover-sub{font-size:9px;color:#4a5558;letter-spacing:2px;margin-top:-8px}
+.pixel-scene{position:relative;width:140px;height:180px;margin:10px 0}
+.pixel-scene canvas{width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.start-btn{background:none;border:2px solid #ffb05d;color:#ffb05d;font-family:inherit;font-size:clamp(16px,5vw,24px);letter-spacing:5px;padding:12px 32px;cursor:pointer;transition:all .2s;font-weight:bold}
+.start-btn:hover{background:#ffb05d;color:#0a0b0d}
+.start-btn:active{transform:scale(.94)}
+
+/* ===== GAME ===== */
+.game-screen{flex:1;display:flex;flex-direction:column;align-items:center;width:100%;padding:16px 12px}
+.topbar{width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 4px;margin-bottom:6px}
+.game-title{font-size:clamp(14px,3.5vw,18px);color:#ffb05d;letter-spacing:2px;font-weight:bold}
+.level-label{font-size:10px;color:#7a8589;letter-spacing:1px}
+.rule-text{font-size:10px;color:#8a9499;text-align:center;margin-bottom:12px;line-height:1.5;padding:0 10px}
+.board-container{flex:1;display:flex;align-items:center;justify-content:center;width:100%;position:relative}
+.board{display:grid;gap:7px;position:relative;touch-action:none;user-select:none}
+.cell{width:clamp(42px,13vw,62px);height:clamp(42px,13vw,62px);border-radius:11px;background:linear-gradient(145deg,#4a5860,#343e44);box-shadow:inset 0 2px 0 rgba(255,255,255,.05),0 4px 0 #0f1214;position:relative;display:flex;align-items:center;justify-content:center;transition:background .12s,transform .1s,box-shadow .12s}
+.cell.visited{background:linear-gradient(145deg,#ff9f40,#cc6a20);box-shadow:inset 0 2px 0 rgba(255,255,255,.12),0 4px 0 #5a2e10;transform:translateY(-2px)}
+.cell.is-start{outline:2px solid rgba(255,176,93,.6);outline-offset:2px}
+.cell.is-end{outline:2px solid rgba(103,211,154,.6);outline-offset:2px}
+.cell.hint-glow{animation:hintAnim .6s ease-in-out 3}
+.cell-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.placeholder{width:clamp(42px,13vw,62px);height:clamp(42px,13vw,62px);visibility:hidden}
+.path-line{position:absolute;height:5px;background:#ffcc66;border-radius:99px;transform-origin:left center;pointer-events:none;box-shadow:0 0 6px rgba(255,180,60,.5);z-index:5;transition:opacity .1s}
+.progress-bar{display:flex;gap:7px;margin:10px 0 6px}
+.progress-bar span{width:9px;height:9px;border-radius:50%;background:#2a3336;border:1px solid #3a4548}
+.progress-bar span.done{background:#ffb05d;border-color:#ff9030;box-shadow:0 0 6px rgba(255,160,50,.4)}
+.footer-btns{display:flex;gap:10px;margin-top:8px}
+.btn{border:1px solid #3a464c;border-radius:8px;background:#1a2024;color:#c8d0d4;padding:10px 16px;font-family:inherit;font-size:11px;cursor:pointer;transition:all .15s;letter-spacing:1px}
+.btn:hover{border-color:#cc7a30;background:#242e34}
+.btn:active{transform:scale(.95)}
+.btn.primary{border-color:#8a4d27;color:#ffd09a}
+
+/* ===== SUCCESS ===== */
+.success-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:20px}
+.stamp{font-size:32px;color:#67d39a;border:3px solid #67d39a;padding:8px 22px;transform:rotate(-4deg);letter-spacing:4px;font-weight:bold}
+.success-screen h2{font-size:clamp(18px,5vw,28px);color:#ffb05d;letter-spacing:2px}
+.success-screen p{color:#a0aab0;font-size:11px;line-height:1.8;max-width:300px}
+
+/* ===== TOAST ===== */
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:#1a2024;border:1px solid #4a5860;color:#f4d9b8;border-radius:8px;padding:8px 14px;font-size:10px;pointer-events:none;transition:all .25s;z-index:100;white-space:nowrap}
+.toast.visible{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== ANIMATIONS ===== */
+.shake-anim{animation:shakeIt .4s both}
+@keyframes shakeIt{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+@keyframes hintAnim{0%,100%{box-shadow:inset 0 2px 0 rgba(255,255,255,.05),0 4px 0 #0f1214}50%{box-shadow:inset 0 2px 0 rgba(255,255,255,.05),0 4px 0 #0f1214,0 0 12px 3px rgba(255,200,60,.6)}}
+.fail-flash .cell{box-shadow:inset 0 0 0 3px #e54e56!important}
+.hidden{display:none!important}
+</style>
 </head>
 <body>
-    <div id="app">
-        <div id="titleArea" class="title">⛓️ MONSTEUR'S ESCAPE</div>
-        <canvas id="gameCanvas" width="500" height="500"></canvas>
-        <div class="ui">
-            <button class="btn" id="restartBtn">⟳ 重新開始</button>
-            <div class="info" id="levelInfo">LEVEL 1: 手銬</div>
-            <button class="btn btn-hint" id="hintBtn">💡 提示</button>
-        </div>
+<div class="app">
+  <!-- COVER -->
+  <section id="coverScreen" class="cover">
+    <div class="cover-title">MONSIEUR'S QUIET ROUTE</div>
+    <div class="cover-sub">A PATH AWAITS</div>
+    <div class="pixel-scene"><canvas id="pixelCanvas" width="140" height="180"></canvas></div>
+    <button class="start-btn" id="startBtn">START GAME</button>
+  </section>
+
+  <!-- GAME -->
+  <section id="gameScreen" class="game-screen hidden">
+    <div class="topbar">
+      <div class="game-title">MONSIEUR</div>
+      <div class="level-label" id="levelLabel">LEVEL 1 / 3</div>
     </div>
-    <script>
-        // ============================================================
-        //  MONSTEUR'S ESCAPE — 完整遊戲
-        //  完全符合你的需求：一筆畫、走錯抖動、三關、像素小人
-        // ============================================================
+    <div class="rule-text" id="ruleText">Draw a single line through every cell. Find your way out.</div>
+    <div class="board-container">
+      <div class="board" id="board"></div>
+    </div>
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="footer-btns">
+      <button class="btn primary" id="restartBtn">↻ 重新開始</button>
+      <button class="btn" id="hintBtn">✦ 提示</button>
+    </div>
+  </section>
 
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const levelInfo = document.getElementById('levelInfo');
+  <!-- SUCCESS -->
+  <section id="successScreen" class="success-screen hidden">
+    <div class="stamp">CLEAR</div>
+    <h2>THE WAY IS OPEN</h2>
+    <p>每一格都留下了你的足跡。<br>遠處似乎有熟悉的燈光。</p>
+    <button class="btn primary" id="againBtn">再走一次</button>
+  </section>
 
-        // ----- 遊戲狀態 -----
-        let currentLevel = 0; // 0:封面, 1:手銬, 2:鑰匙, 3:房子
-        let grid = []; // 二維陣列 0=空格, 1=可走
-        let rows = 0,
-            cols = 0;
-        let start = { r: 0, c: 0 };
-        let end = { r: 0, c: 0 };
-        let path = []; // 走過的路徑 [{r,c}]
-        let isDragging = false;
-        let gameOver = false; // true=通關
-        let isShaking = false;
+  <div class="toast" id="toast"></div>
+</div>
 
-        // ----- 關卡定義 (手銬→鑰匙→房子) -----
-        const LEVELS = [{
-            name: '手銬',
-            grid: [
-                [1, 1, 1, 1, 1],
-                [1, 0, 1, 0, 1],
-                [1, 0, 1, 0, 1],
-                [1, 0, 1, 0, 1],
-                [1, 1, 1, 1, 1]
-            ],
-            start: { r: 0, c: 0 },
-            end: { r: 4, c: 4 }
-        }, {
-            name: '鑰匙',
-            grid: [
-                [1, 1, 1, 1, 0],
-                [1, 0, 1, 0, 0],
-                [1, 0, 1, 0, 0],
-                [1, 0, 1, 0, 0],
-                [1, 1, 1, 1, 1]
-            ],
-            start: { r: 0, c: 0 },
-            end: { r: 4, c: 4 }
-        }, {
-            name: '房子',
-            grid: [
-                [1, 1, 1, 1, 1],
-                [1, 0, 0, 0, 1],
-                [1, 0, 1, 0, 1],
-                [1, 0, 0, 0, 1],
-                [1, 1, 1, 1, 1]
-            ],
-            start: { r: 0, c: 0 },
-            end: { r: 4, c: 4 }
-        }];
+<script>
+'use strict';
 
-        // ----- 初始化關卡 -----
-        function loadLevel(index) {
-            const lv = LEVELS[index];
-            if (!lv) {
-                // 全部通關 → 回到封面？
-                currentLevel = 0;
-                drawCover();
-                return;
-            }
-            rows = lv.grid.length;
-            cols = lv.grid[0].length;
-            grid = lv.grid.map(row => [...row]);
-            start = { ...lv.start };
-            end = { ...lv.end };
-            path = [];
-            gameOver = false;
-            isShaking = false;
-            levelInfo.textContent = `LEVEL ${index+1}: ${lv.name}`;
-            drawGame();
+// ===== LEVEL DATA (all paths verified: adjacent, no duplicates) =====
+const LEVELS = [
+  { name:"KEY", cols:5, rows:3, path:[[1,0],[0,0],[0,1],[1,1],[2,1],[3,1],[4,1],[4,2]] },
+  { name:"CUFFS", cols:5, rows:3, path:[[1,0],[0,0],[0,1],[0,2],[1,2],[1,1],[2,1],[3,1],[3,0],[4,0],[4,1],[4,2],[3,2]] },
+  { name:"HOME", cols:5, rows:3, path:[[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[0,1],[0,2],[1,2],[2,2],[3,2],[4,2],[4,1]] }
+];
+
+// ===== STATE =====
+let currentLevel = 0;
+let trail = []; // array of cell DOM elements in visit order
+let isDrawing = false;
+let pathLines = []; // SVG/DOM line elements
+
+// ===== DOM =====
+const board = document.getElementById('board');
+const toastEl = document.getElementById('toast');
+
+// ===== SCREENS =====
+function showScreen(id) {
+  document.getElementById('coverScreen').classList.toggle('hidden', id !== 'coverScreen');
+  document.getElementById('gameScreen').classList.toggle('hidden', id !== 'gameScreen');
+  document.getElementById('successScreen').classList.toggle('hidden', id !== 'successScreen');
+}
+
+// ===== TOAST =====
+let toastTimeout;
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('visible');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => toastEl.classList.remove('visible'), 1800);
+}
+
+// ===== PIXEL ART (Cover) =====
+function drawPixelPerson() {
+  const canvas = document.getElementById('pixelCanvas');
+  const ctx = canvas.getContext('2d');
+  const s = 4; // pixel scale
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Prison bars (background)
+  ctx.fillStyle = '#555e63';
+  for (let i = 0; i < 7; i++) {
+    ctx.fillRect(i * 22 + 4, 0, 4, 180);
+  }
+  // Bar horizontal
+  ctx.fillStyle = '#4a5358';
+  ctx.fillRect(0, 30, 140, 4);
+  ctx.fillRect(0, 130, 140, 4);
+
+  // Head
+  ctx.fillStyle = '#d4956a';
+  ctx.fillRect(54, 28, 32, 28);
+  // Hair
+  ctx.fillStyle = '#2a2520';
+  ctx.fillRect(54, 22, 32, 10);
+  ctx.fillRect(50, 28, 4, 8);
+  ctx.fillRect(86, 28, 4, 8);
+  // Eyes
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(62, 40, 4, 5);
+  ctx.fillRect(76, 40, 4, 5);
+  // Mouth
+  ctx.fillStyle = '#8a5a3a';
+  ctx.fillRect(66, 48, 10, 3);
+
+  // Body (orange jumpsuit)
+  ctx.fillStyle = '#e87830';
+  ctx.fillRect(46, 58, 48, 52);
+  // Badge/number
+  ctx.fillStyle = '#ffe0a0';
+  ctx.fillRect(62, 68, 16, 12);
+  ctx.fillStyle = '#8a5020';
+  ctx.fillRect(64, 70, 3, 8);
+  ctx.fillRect(68, 70, 3, 8);
+  ctx.fillRect(72, 70, 3, 8);
+
+  // Arms (reaching forward/gripping bars)
+  ctx.fillStyle = '#e87830';
+  // Left arm
+  ctx.fillRect(34, 60, 14, 12);
+  ctx.fillRect(26, 58, 12, 14);
+  // Right arm
+  ctx.fillRect(92, 60, 14, 12);
+  ctx.fillRect(102, 58, 12, 14);
+  // Hands (gripping bars)
+  ctx.fillStyle = '#d4956a';
+  ctx.fillRect(26, 54, 10, 10);
+  ctx.fillRect(104, 54, 10, 10);
+
+  // Legs
+  ctx.fillStyle = '#3a4448';
+  ctx.fillRect(50, 112, 16, 28);
+  ctx.fillRect(74, 112, 16, 28);
+  // Shoes
+  ctx.fillStyle = '#2a2e30';
+  ctx.fillRect(48, 138, 20, 8);
+  ctx.fillRect(72, 138, 20, 8);
+}
+
+// ===== RENDER BOARD =====
+function renderBoard() {
+  const level = LEVELS[currentLevel];
+  const { cols, rows, path } = level;
+  
+  // Build cell set
+  const cellSet = new Set(path.map(p => p[0] + ',' + p[1]));
+  const startKey = path[0][0] + ',' + path[0][1];
+  const endKey = path[path.length - 1][0] + ',' + path[path.length - 1][1];
+
+  board.innerHTML = '';
+  board.style.gridTemplateColumns = `repeat(${cols}, auto)`;
+  board.style.gridTemplateRows = `repeat(${rows}, auto)`;
+  board.classList.remove('shake-anim', 'fail-flash');
+
+  // Create grid cells (including placeholders for empty spots)
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const key = c + ',' + r;
+      if (cellSet.has(key)) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.col = c;
+        cell.dataset.row = r;
+        
+        if (key === startKey) {
+          cell.classList.add('is-start');
+          // Pixel person icon (small)
+          cell.innerHTML = '<div class="cell-icon"><svg width="20" height="24" viewBox="0 0 20 24"><rect x="7" y="0" width="6" height="6" fill="#d4956a"/><rect x="5" y="7" width="10" height="10" fill="#e87830"/><rect x="6" y="18" width="3" height="6" fill="#3a4448"/><rect x="11" y="18" width="3" height="6" fill="#3a4448"/></svg></div>';
+        } else if (key === endKey) {
+          cell.classList.add('is-end');
+          // Door icon
+          cell.innerHTML = '<div class="cell-icon"><svg width="18" height="22" viewBox="0 0 18 22"><rect x="2" y="0" width="14" height="22" rx="2" fill="#2a3a40" stroke="#c8a050" stroke-width="1.5"/><circle cx="13" cy="12" r="1.5" fill="#c8a050"/></svg></div>';
         }
+        
+        board.appendChild(cell);
+      } else {
+        const ph = document.createElement('div');
+        ph.className = 'placeholder';
+        board.appendChild(ph);
+      }
+    }
+  }
 
-        // ----- 繪圖：封面 (像素小人抓欄杆) -----
-        function drawCover() {
-            ctx.clearRect(0, 0, 500, 500);
-            // 背景監獄
-            ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(0, 0, 500, 500);
-            // 欄杆
-            for (let i = 0; i < 12; i++) {
-                ctx.fillStyle = '#7f8c8d';
-                ctx.fillRect(40 + i * 40, 60, 8, 380);
-                ctx.fillRect(42 + i * 40, 60, 4, 20);
-                ctx.fillRect(42 + i * 40, 420, 4, 20);
-            }
-            // 橫桿
-            ctx.fillStyle = '#95a5a6';
-            ctx.fillRect(30, 130, 440, 12);
-            ctx.fillRect(30, 370, 440, 12);
+  // Reset state
+  trail = [];
+  pathLines.forEach(l => l.remove());
+  pathLines = [];
+  isDrawing = false;
 
-            // ---- 像素小人 (橘色囚服) ----
-            const px = 250,
-                py = 240;
-            const s = 8; // 像素大小
-            // 身體 (橘色)
-            ctx.fillStyle = '#e67e22';
-            for (let r = 0; r < 6; r++) {
-                for (let c = 0; c < 4; c++) {
-                    ctx.fillRect(px + c * s - 16, py + r * s - 20, s, s);
-                }
-            }
-            // 頭 (膚色)
-            ctx.fillStyle = '#f5cba7';
-            for (let r = 0; r < 5; r++) {
-                for (let c = 0; c < 4; c++) {
-                    ctx.fillRect(px + c * s - 16 + 2, py + r * s - 36, s - 2, s - 2);
-                }
-            }
-            // 眼睛
-            ctx.fillStyle = '#000';
-            ctx.fillRect(px - 6, py - 28, 3, 3);
-            ctx.fillRect(px + 6, py - 28, 3, 3);
-            // 囚服條紋
-            ctx.fillStyle = '#d35400';
-            for (let i = 0; i < 3; i++) {
-                ctx.fillRect(px - 14, py - 8 + i * 10, 28, 2);
-            }
-            // 手抓欄杆 (手臂延伸)
-            ctx.fillStyle = '#f5cba7';
-            ctx.fillRect(px - 28, py - 14, 12, 6);
-            ctx.fillRect(px + 20, py - 14, 12, 6);
+  // Update UI
+  document.getElementById('levelLabel').textContent = `LEVEL ${currentLevel + 1} / 3  ·  ${level.name}`;
+  updateProgress();
+}
 
-            // 標題
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 36px "Courier New", monospace';
-            ctx.textAlign = 'center';
-            ctx.shadowColor = '#e94560';
-            ctx.shadowBlur = 20;
-            ctx.fillText('MONSTEUR\'S ESCAPE', 250, 120);
-            ctx.shadowBlur = 0;
+function updateProgress() {
+  const bar = document.getElementById('progressBar');
+  bar.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const dot = document.createElement('span');
+    if (i <= currentLevel) dot.classList.add('done');
+    bar.appendChild(dot);
+  }
+}
 
-            // START GAME 按鈕 (像素風)
-            ctx.fillStyle = '#e94560';
-            ctx.roundRect(150, 430, 200, 50, 12);
-            ctx.fill();
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 26px "Courier New", monospace';
-            ctx.fillText('START GAME', 250, 466);
+// ===== CELL LOOKUP =====
+function getCellAt(col, row) {
+  return board.querySelector(`.cell[data-col="${col}"][data-row="${row}"]`);
+}
 
-            // 儲存點擊區域 (簡易判斷)
-            canvas._coverBtn = { x: 150, y: 430, w: 200, h: 50 };
-        }
+function getCellFromPoint(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  if (el.classList.contains('cell')) return el;
+  const parent = el.closest('.cell');
+  return parent;
+}
 
-        // 擴充 roundRect
-        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-            if (w < 2 * r) r = w / 2;
-            if (h < 2 * r) r = h / 2;
-            this.moveTo(x + r, y);
-            this.lineTo(x + w - r, y);
-            this.quadraticCurveTo(x + w, y, x + w, y + r);
-            this.lineTo(x + w, y + h - r);
-            this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-            this.lineTo(x + r, y + h);
-            this.quadraticCurveTo(x, y + h, x, y + h - r);
-            this.lineTo(x, y + r);
-            this.quadraticCurveTo(x, y, x + r, y);
-            return this;
-        };
+function areAdjacent(cellA, cellB) {
+  const c1 = parseInt(cellA.dataset.col), r1 = parseInt(cellA.dataset.row);
+  const c2 = parseInt(cellB.dataset.col), r2 = parseInt(cellB.dataset.row);
+  return Math.abs(c1 - c2) + Math.abs(r1 - r2) === 1;
+}
 
-        // ----- 繪圖：遊戲 (含像素小人起點/終點) -----
-        function drawGame() {
-            if (isShaking) return;
-            ctx.clearRect(0, 0, 500, 500);
-            const cellW = 500 / cols;
-            const cellH = 500 / rows;
+// ===== PATH LINES =====
+function addLine(cellA, cellB) {
+  const boardRect = board.getBoundingClientRect();
+  const aRect = cellA.getBoundingClientRect();
+  const bRect = cellB.getBoundingClientRect();
+  
+  const x1 = aRect.left + aRect.width / 2 - boardRect.left;
+  const y1 = aRect.top + aRect.height / 2 - boardRect.top;
+  const x2 = bRect.left + bRect.width / 2 - boardRect.left;
+  const y2 = bRect.top + bRect.height / 2 - boardRect.top;
+  
+  const length = Math.hypot(x2 - x1, y2 - y1);
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  
+  const line = document.createElement('div');
+  line.className = 'path-line';
+  line.style.left = x1 + 'px';
+  line.style.top = (y1 - 2.5) + 'px';
+  line.style.width = length + 'px';
+  line.style.transform = `rotate(${angle}rad)`;
+  board.appendChild(line);
+  pathLines.push(line);
+}
 
-            // 繪製網格
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    const x = c * cellW,
-                        y = r * cellH;
-                    if (grid[r][c] === 0) {
-                        ctx.fillStyle = '#1a1a3e';
-                        ctx.fillRect(x, y, cellW, cellH);
-                    } else {
-                        ctx.fillStyle = '#2c3e50';
-                        ctx.fillRect(x, y, cellW, cellH);
-                        ctx.strokeStyle = '#34495e';
-                        ctx.lineWidth = 1;
-                        ctx.strokeRect(x, y, cellW, cellH);
-                    }
-                }
-            }
+// ===== GAME LOGIC =====
+function resetTrail() {
+  trail.forEach(c => c.classList.remove('visited'));
+  trail = [];
+  pathLines.forEach(l => l.remove());
+  pathLines = [];
+  isDrawing = false;
+}
 
-            // 繪製路徑 (線段)
-            if (path.length > 1) {
-                ctx.beginPath();
-                ctx.strokeStyle = '#f1c40f';
-                ctx.lineWidth = 6;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                for (let i = 0; i < path.length; i++) {
-                    const px = path[i].c * cellW + cellW / 2;
-                    const py = path[i].r * cellH + cellH / 2;
-                    if (i === 0) ctx.moveTo(px, py);
-                    else ctx.lineTo(px, py);
-                }
-                ctx.stroke();
-            }
+function failShake(msg) {
+  isDrawing = false;
+  board.classList.add('fail-flash');
+  board.classList.remove('shake-anim');
+  void board.offsetWidth; // force reflow
+  board.classList.add('shake-anim');
+  showToast(msg || '還有格子沒走到，回到起點重試。');
+  
+  setTimeout(() => {
+    board.classList.remove('fail-flash', 'shake-anim');
+    resetTrail();
+  }, 450);
+}
 
-            // 畫起點 (像素小人)
-            drawPixelMan(start.r, start.c, cellW, cellH, '#e67e22', false);
+function visitCell(cell) {
+  if (!cell || !cell.classList.contains('cell')) return;
+  
+  // First cell must be start
+  if (trail.length === 0) {
+    if (!cell.classList.contains('is-start')) return;
+    trail.push(cell);
+    cell.classList.add('visited');
+    isDrawing = true;
+    return;
+  }
+  
+  // Same cell as last - ignore
+  if (cell === trail[trail.length - 1]) return;
+  
+  // Must be adjacent to last cell
+  const lastCell = trail[trail.length - 1];
+  if (!areAdjacent(lastCell, cell)) return;
+  
+  // Can't revisit
+  if (trail.includes(cell)) {
+    failShake('不能回到已走過的格子。');
+    return;
+  }
+  
+  // Visit the cell
+  trail.push(cell);
+  cell.classList.add('visited');
+  addLine(lastCell, cell);
+  
+  // Check if reached end
+  if (cell.classList.contains('is-end')) {
+    const totalCells = board.querySelectorAll('.cell').length;
+    if (trail.length === totalCells) {
+      // SUCCESS!
+      levelComplete();
+    } else {
+      // Not all cells visited
+      failShake('還有格子沒走到，回到起點重試。');
+    }
+  }
+}
 
-            // 畫終點 (橘色囚服小人)
-            drawPixelMan(end.r, end.c, cellW, cellH, '#e67e22', true);
+function levelComplete() {
+  isDrawing = false;
+  showToast('路線完成！');
+  
+  // Animate cells
+  const cells = board.querySelectorAll('.cell');
+  cells.forEach((c, i) => {
+    setTimeout(() => {
+      c.style.filter = 'brightness(1.3)';
+    }, i * 30);
+  });
+  
+  setTimeout(() => {
+    if (currentLevel < 2) {
+      currentLevel++;
+      renderBoard();
+      showToast('下一段路線已出現。');
+    } else {
+      showScreen('successScreen');
+    }
+  }, 800);
+}
 
-            // 如果通關, 顯示成功
-            if (gameOver) {
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                ctx.fillRect(0, 0, 500, 500);
-                ctx.fillStyle = '#2ecc71';
-                ctx.font = 'bold 40px "Courier New", monospace';
-                ctx.textAlign = 'center';
-                ctx.fillText('✅ 逃獄成功!', 250, 240);
-                ctx.fillStyle = '#fff';
-                ctx.font = '20px "Courier New", monospace';
-                ctx.fillText('點擊繼續下一關', 250, 300);
-            }
-        }
+// ===== HINT =====
+function showHint() {
+  const level = LEVELS[currentLevel];
+  
+  if (trail.length === 0) {
+    // Show start cell
+    const [col, row] = level.path[0];
+    const cell = getCellAt(col, row);
+    if (cell) {
+      cell.classList.remove('hint-glow');
+      void cell.offsetWidth;
+      cell.classList.add('hint-glow');
+      setTimeout(() => cell.classList.remove('hint-glow'), 2000);
+      showToast('從金色閃爍的格子開始。');
+    }
+    return;
+  }
+  
+  // Show the next step in the solution path
+  // Find where current trail matches solution
+  const nextIndex = trail.length;
+  if (nextIndex >= level.path.length) return;
+  
+  const [col, row] = level.path[nextIndex];
+  const cell = getCellAt(col, row);
+  if (cell && !trail.includes(cell)) {
+    cell.classList.remove('hint-glow');
+    void cell.offsetWidth;
+    cell.classList.add('hint-glow');
+    setTimeout(() => cell.classList.remove('hint-glow'), 2000);
+    showToast('金色閃爍的是下一步方向。');
+  } else {
+    // User deviated from solution - suggest restart
+    showToast('試試重新開始，跟著提示走。');
+  }
+}
 
-        // ----- 畫像素小人 (起點/終點) -----
-        function drawPixelMan(row, col, cellW, cellH, color, isEnd) {
-            const cx = col * cellW + cellW / 2;
-            const cy = row * cellH + cellH / 2;
-            const s = Math.min(cellW, cellH) * 0.12;
-            // 身體
-            ctx.fillStyle = color;
-            for (let r = 0; r < 5; r++) {
-                for (let c = 0; c < 4; c++) {
-                    ctx.fillRect(cx + c * s - s * 2, cy + r * s - s * 2.5, s, s);
-                }
-            }
-            // 頭
-            ctx.fillStyle = '#f5cba7';
-            for (let r = 0; r < 4; r++) {
-                for (let c = 0; c < 3; c++) {
-                    ctx.fillRect(cx + c * s - s * 1.5 + 2, cy + r * s - s * 4.5, s - 1, s - 1);
-                }
-            }
-            // 眼睛
-            ctx.fillStyle = '#000';
-            ctx.fillRect(cx - s * 0.8, cy - s * 3.5, s * 0.5, s * 0.5);
-            ctx.fillRect(cx + s * 0.3, cy - s * 3.5, s * 0.5, s * 0.5);
-            // 囚服條紋
-            ctx.fillStyle = '#d35400';
-            for (let i = 0; i < 2; i++) {
-                ctx.fillRect(cx - s * 1.8, cy - s * 0.8 + i * s * 2, s * 3.6, s * 0.3);
-            }
-            // 終點加個帽子或標記
-            if (isEnd) {
-                ctx.fillStyle = '#f1c40f';
-                ctx.fillRect(cx - s * 1.2, cy - s * 5.5, s * 2.4, s * 0.8);
-            }
-        }
+// ===== POINTER EVENTS =====
+let activePointerId = null;
 
-        // ----- 檢查是否通關 (走過所有1) -----
-        function checkWin() {
-            const visited = new Set(path.map(p => `${p.r},${p.c}`));
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    if (grid[r][c] === 1 && !visited.has(`${r},${c}`)) {
-                        return false;
-                    }
-                }
-            }
-            // 必須最後一步在終點
-            const last = path[path.length - 1];
-            if (!last || last.r !== end.r || last.c !== end.c) return false;
-            return true;
-        }
+function handlePointerDown(e) {
+  e.preventDefault();
+  activePointerId = e.pointerId;
+  const cell = getCellFromPoint(e.clientX, e.clientY);
+  if (cell) visitCell(cell);
+}
 
-        // ----- 抖動效果 (走錯) -----
-        function shakeAndReset() {
-            if (isShaking) return;
-            isShaking = true;
-            const app = document.getElementById('app');
-            app.classList.add('shake');
-            // 畫紅色邊框
-            ctx.strokeStyle = '#e74c3c';
-            ctx.lineWidth = 8;
-            ctx.strokeRect(0, 0, 500, 500);
-            setTimeout(() => {
-                app.classList.remove('shake');
-                isShaking = false;
-                // 重置路徑
-                path = [];
-                drawGame();
-            }, 400);
-        }
+function handlePointerMove(e) {
+  if (!isDrawing) return;
+  e.preventDefault();
+  const cell = getCellFromPoint(e.clientX, e.clientY);
+  if (cell) visitCell(cell);
+}
 
-        // ----- 遊戲邏輯：滑鼠/觸控事件 -----
-        function getGridPos(e) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            let clientX, clientY;
-            if (e.touches) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-                e.preventDefault();
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-            const x = (clientX - rect.left) * scaleX;
-            const y = (clientY - rect.top) * scaleY;
-            if (x < 0 || x > 500 || y < 0 || y > 500) return null;
-            const c = Math.floor(x / (500 / cols));
-            const r = Math.floor(y / (500 / rows));
-            if (r < 0 || r >= rows || c < 0 || c >= cols) return null;
-            return { r, c };
-        }
+function handlePointerUp(e) {
+  // Don't end drawing - user can lift and continue
+  // isDrawing stays true until reset or level complete
+  activePointerId = null;
+}
 
-        function handleStart(e) {
-            e.preventDefault();
-            // 如果在封面
-            if (currentLevel === 0) {
-                const rect = canvas.getBoundingClientRect();
-                let cx, cy;
-                if (e.touches) {
-                    cx = e.touches[0].clientX - rect.left;
-                    cy = e.touches[0].clientY - rect.top;
-                } else {
-                    cx = e.clientX - rect.left;
-                    cy = e.clientY - rect.top;
-                }
-                const scaleX = canvas.width / rect.width;
-                const scaleY = canvas.height / rect.height;
-                const x = cx * scaleX,
-                    y = cy * scaleY;
-                if (x >= 150 && x <= 350 && y >= 430 && y <= 480) {
-                    currentLevel = 1;
-                    loadLevel(0);
-                }
-                return;
-            }
-            if (gameOver) {
-                // 通關後點擊進入下一關
-                if (currentLevel < LEVELS.length) {
-                    currentLevel++;
-                    if (currentLevel >= LEVELS.length) {
-                        // 全部破關 回到封面
-                        currentLevel = 0;
-                        drawCover();
-                    } else {
-                        loadLevel(currentLevel);
-                    }
-                }
-                return;
-            }
-            if (isShaking) return;
-            const pos = getGridPos(e);
-            if (!pos) return;
-            const { r, c } = pos;
-            // 必須從起點開始
-            if (r === start.r && c === start.c && path.length === 0) {
-                path.push({ r, c });
-                isDragging = true;
-                drawGame();
-            }
-        }
+// Use document-level events for reliable tracking
+document.addEventListener('pointerdown', (e) => {
+  if (board.contains(e.target) || e.target === board) {
+    handlePointerDown(e);
+  }
+});
+document.addEventListener('pointermove', (e) => {
+  handlePointerMove(e);
+});
+document.addEventListener('pointerup', handlePointerUp);
+document.addEventListener('pointercancel', handlePointerUp);
 
-        function handleMove(e) {
-            e.preventDefault();
-            if (!isDragging || isShaking || gameOver || currentLevel === 0) return;
-            const pos = getGridPos(e);
-            if (!pos) return;
-            const { r, c } = pos;
-            // 不能走空格
-            if (grid[r][c] === 0) return;
-            // 不能重複走過
-            if (path.some(p => p.r === r && p.c === c)) return;
-            // 必須相鄰 (上下左右)
-            const last = path[path.length - 1];
-            const dr = Math.abs(r - last.r);
-            const dc = Math.abs(c - last.c);
-            if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
-                path.push({ r, c });
-                drawGame();
-                // 檢查是否通關
-                if (checkWin()) {
-                    gameOver = true;
-                    drawGame();
-                    isDragging = false;
-                    return;
-                }
-                // 如果走到終點但沒走完所有格子 -> 抖動
-                if (r === end.r && c === end.c && !gameOver) {
-                    isDragging = false;
-                    shakeAndReset();
-                }
-            }
-        }
+// Prevent scrolling on touch
+document.addEventListener('touchmove', e => {
+  if (isDrawing) e.preventDefault();
+}, { passive: false });
 
-        function handleEnd(e) {
-            e.preventDefault();
-            if (isDragging) {
-                isDragging = false;
-                // 如果最後不是終點且沒走完 不重置(讓玩家繼續)
-                // 但如果停在終點且沒走完 已在move中觸發抖動
-                // 這裡不做額外動作
-            }
-        }
+// Prevent context menu on long press
+board.addEventListener('contextmenu', e => e.preventDefault());
 
-        // ----- 按鈕事件 -----
-        document.getElementById('restartBtn').addEventListener('click', () => {
-            if (currentLevel === 0) {
-                drawCover();
-                return;
-            }
-            loadLevel(currentLevel - 1);
-        });
+// ===== BUTTON EVENTS =====
+document.getElementById('startBtn').addEventListener('click', () => {
+  showScreen('gameScreen');
+  renderBoard();
+});
 
-        document.getElementById('hintBtn').addEventListener('click', () => {
-            if (currentLevel === 0 || gameOver) return;
-            // 簡單提示: 閃爍下一個可走的位置
-            const last = path[path.length - 1] || start;
-            const dirs = [
-                [-1, 0],
-                [1, 0],
-                [0, -1],
-                [0, 1]
-            ];
-            for (const d of dirs) {
-                const nr = last.r + d[0];
-                const nc = last.c + d[1];
-                if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
-                if (grid[nr][nc] === 0) continue;
-                if (path.some(p => p.r === nr && p.c === nc)) continue;
-                // 畫閃爍提示
-                const cellW = 500 / cols;
-                const cellH = 500 / rows;
-                ctx.fillStyle = 'rgba(46, 204, 113, 0.6)';
-                ctx.fillRect(nc * cellW, nr * cellH, cellW, cellH);
-                setTimeout(() => drawGame(), 500);
-                return;
-            }
-            // 沒有可走的路徑 = 死路, 提示重置
-            alert('沒有可走的路徑，點擊重新開始');
-        });
+document.getElementById('restartBtn').addEventListener('click', () => {
+  resetTrail();
+  showToast('已回到起點。');
+});
 
-        // ----- 註冊事件 -----
-        canvas.addEventListener('mousedown', handleStart);
-        canvas.addEventListener('mousemove', handleMove);
-        canvas.addEventListener('mouseup', handleEnd);
-        canvas.addEventListener('mouseleave', handleEnd);
-        canvas.addEventListener('touchstart', handleStart, { passive: false });
-        canvas.addEventListener('touchmove', handleMove, { passive: false });
-        canvas.addEventListener('touchend', handleEnd, { passive: false });
+document.getElementById('hintBtn').addEventListener('click', showHint);
 
-        // ----- 啟動遊戲 (顯示封面) -----
-        currentLevel = 0;
-        drawCover();
-    </script>
+document.getElementById('againBtn').addEventListener('click', () => {
+  currentLevel = 0;
+  showScreen('gameScreen');
+  renderBoard();
+});
+
+// ===== INIT =====
+drawPixelPerson();
+</script>
 </body>
 </html>
